@@ -1,5 +1,5 @@
 body {
-  background-color: #242582;
+  background-color: white;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -11,10 +11,10 @@ body {
 .main {
   display: flex;
   flex-direction: row;
-  background-color: #552d67;
+  background-color: whitesmoke;
   border-style: solid;
-  border-width: 0.5rem;
-  border-color: #f64c72;
+  border-width: 0.25rem;
+  border-color: black;
   width: 450px;
   padding: 25px;
 }
@@ -35,27 +35,35 @@ body {
   justify-content: center;
   align-items: center;
   border-radius: 1rem;
-  font-size: 1.2rem;
-  background: #99738e;
-  box-shadow: 2px 2px black;
+  font-size: 1rem;
+  color: black;
+  background: white;
+  box-shadow: black 3px 3px 5px;
   user-select: none;
-}
-
-.musical-btn:hover {
-  cursor: pointer;
 }
 
 .power-btn {
   text-align: center;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
   font-size: 12px;
-  color: white;
-  background-color: green;
-  border-radius: 50%;
+  color: black;
+  background-color: white;
+  border: 2px solid black;
   width: 80px;
   height: 60px;
   box-shadow: black 3px 3px 5px;
   padding: 20px;
+  outline: none;
+}
+
+.drum-pad:hover,
+.power-btn:hover {
+  cursor: pointer;
+}
+
+.power-btn:active {
+  background-color: lightgray;
+  box-shadow: white 0px 3px;
 }
 
 .displayMessage {
@@ -63,7 +71,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: gray;
+  background-color: white;
+  color: black;
   min-height: 7.5vh;
   width: 80%;
 }
