@@ -1,115 +1,140 @@
 import './App.css';
-import {useRef, useState, useEffect, createRef} from 'react';
+import {useRef, useEffect, createRef, useReducer} from 'react';
 import collection from './Collection';
 import Slider from '@material-ui/core/Slider';
 function App() {
+  //keydown action listener
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
 
-  //states and refs declaration
-  const [bank, setBank] = useState(true);
-  const [volume, setVolume] = useState(0.5);
-  const [isOn, setOn] = useState(true);
+    return function cleanup(){
+       window.removeEventListener("keydown", handleKeyDown);
+    }
+  });
+
+  //define reducer
+  const reducer = (state, action) => {
+    if(action.type === "changeVolume"){
+      return {
+        ...state,
+        volume : action.param
+      }
+    }
+
+    if(action.type === "setOn"){
+      return {
+        ...state,
+        isOn : !state.isOn
+      }
+    }
+
+    if(action.type === "changeBank"){
+      if(state.bankName === "Heater Kit"){
+
+        return {
+          ...state,
+          bankName : "Smooth Piano Kit"
+        }
+
+      }else{
+
+        return {
+          ...state,
+          bankName : "Heater Kit"
+        }
+
+      }
+    }
+
+    throw new Error('No action received')
+  }
+
+  //define defaultState
+  const defaultState = {
+    bankName : "Heater Kit",
+    volume : 0.5,
+    isOn : true
+  }
+  //using reducer
+  const [state, dispatch] = useReducer(reducer, defaultState)
+
+  //reference declaration
   const displayMessage = useRef(null);
+
+  //Drum pad styling
+  const drumStyle = () => {
+    if(state.isOn){
+       return({
+           background: "white",
+           boxShadow: "black 3px 3px 5px"
+        })
+    }else{
+       return({
+        background : "darkGray",
+        boxShadow : "none",
+      })
+    }
+  }
 
   //ref array for declaring ref with map
   let divRefs = [];
 
   //setting display Message
-  let bankName;
-  if(bank){
-    bankName = 'Heater Kit';
-    if(isOn){
-      if(displayMessage.current != null){
-      displayMessage.current.innerText = "Heater Kit"
-    }
-    }else{
-      displayMessage.current.innerText = ""
+  if(state.isOn){
+    if(displayMessage.current != null){
+      displayMessage.current.innerText = state.bankName
     }
   }else{
-    bankName = "Smooth Piano Kit"
-     if(isOn){
-      if(displayMessage.current != null){
-      displayMessage.current.innerText = "Smooth Piano Kit"
-    }
-    }else{
       displayMessage.current.innerText = ""
-    }
-  }
+  }  
 
-  //get currentCollection depending on bank state
-  let currentCollection = collection.filter(source => {
-          if(source.kitName === bankName){
-            return source;
-          }else{
-        return null;
-      }
-  });
+  //load audio set
+  let audioSet = collection.filter(source => source.kitName === state.bankName);
 
-  //keydown function
+  //keydown handler
   const handleKeyDown = (e) => {
-    if(isOn){
-      //get key object name
-    const selectedName = currentCollection.filter((source)=>{
-      if(e.key.toUpperCase() === source.id){
-          return source;
-      }
-    });
+    
+    if(state.isOn){
+        //get key object name
+        const audioKey = audioSet.find((source) => e.key.toUpperCase() === source.id );
 
-    //get associated div
-    let selectedDiv = [];
-    if(selectedName.length === 1){
-      selectedDiv = divRefs.filter((divRef)=>{
-      if(divRef.current.id === selectedName[0].name){
-        return divRef;
-      }
-    });
+        //get associated div
+        let audioDiv;
+        if(audioKey !== undefined){
+          audioDiv = divRefs.find((divRef)=> divRef.current.id === audioKey.name);
+        }
+
+        //play audio
+        if(audioDiv !== undefined){
+          play(audioDiv);
+        }
     }
 
-    //start action
-    if(selectedDiv.length === 1){
-      displayMessage.current.innerText = selectedDiv[0].current.id;
-      selectedDiv[0].current.style.background = '#f64c72';
-      selectedDiv[0].current.style.boxShadow = "none";
-      selectedDiv[0].current.childNodes[0].volume = volume;
-      selectedDiv[0].current.childNodes[0].load();
-      selectedDiv[0].current.childNodes[0].play();
-      setTimeout(function(){ 
-      selectedDiv[0].current.style.boxShadow = "2px 2px black";
-      selectedDiv[0].current.style.background = '#99738E';  
-    }, 100)
-    }
-    }
   };
 
-  //keydown action listener
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    }
-  })
+ 
   
   
-  //click function
+  //audio play
   const play = (divRef) => {
-   if(isOn){
      displayMessage.current.innerText = divRef.current.id;
-     divRef.current.style.background = '#f64c72';
-     divRef.current.style.boxShadow = "none";
-     divRef.current.childNodes[0].volume = volume;
+     divRef.current.style.boxShadow = "white 0px 3px";
+     divRef.current.style.height = "2.8rem";
+     divRef.current.childNodes[0].volume = state.volume;
      divRef.current.childNodes[0].load();
      divRef.current.childNodes[0].play();
      setTimeout(function(){ 
-     divRef.current.style.boxShadow = "2px 2px black";
-     divRef.current.style.background = '#99738E';  
+     divRef.current.style.boxShadow = "black 3px 3px 5px";
+     divRef.current.style.background = 'white';  
+     divRef.current.style.height = "3rem";
     }, 100);
-   }
   }
 
 
   //volume state
-  const handleVolumeChange = (event ,volume) => {
+  const handleVolumeChange = (volume) => {
     displayMessage.current.innerText = 'Volume : '+Math.round(volume*100);
-    setVolume(volume);
+    dispatch({type : "changeVolume", param : volume})
   }
 
   
@@ -118,11 +143,11 @@ function App() {
       <div className="musical-controls">
       {
         //creating divs
-        currentCollection.map((source) => {
+        audioSet.map((source) => {
           const divRef = createRef();
           divRefs.push(divRef);
           return(
-            <div className="drum-pad" id={source.name} style={{background: "#99738E"}} ref={divRef} onClick={()=>{play(divRef)}}>
+            <div className="drum-pad" id={source.name} ref={divRef} onClick={()=>{if(state.isOn){play(divRef)}}} style={drumStyle()}>
                 <audio className="clip" src={source.src} id={source.id} ></audio>
                  {source.id}
             </div>
@@ -131,12 +156,12 @@ function App() {
       }
       </div>
       <div className="operating-controls">
-      <button className="power-btn" onClick={()=>{setOn(!isOn)}} style={{background : isOn ? "green" : "red"}} >{isOn ? "ON" : "OFF"}</button>
+      <button className="power-btn" onClick={()=>{ dispatch({type : "setOn"}) }}>{state.isOn ? "ON" : "OFF"}</button>
         <div className="displayMessage" >
           <p ref={displayMessage} id="display"></p>
         </div>
-        <Slider value={volume} onChange={handleVolumeChange} min={0} max={1} step={0.01} />
-        <button className="bank_switch" onClick={()=>{setBank((bank)=>{return !bank})}}>Switch Bank</button>
+        <Slider value={state.volume} onChange={handleVolumeChange} min={0} max={1} step={0.01} style={{color : "black"}}/>
+        <button className="bank_switch" onClick={()=>{dispatch({type : "changeBank"})}}>Switch Bank</button>
       </div>
     </div>
   );
