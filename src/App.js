@@ -62,7 +62,7 @@ function App() {
   const displayMessage = useRef(null);
 
   //Drum pad styling
-  const style = () => {
+  const drumStyle = () => {
     if(state.isOn){
        return({
            background: "white",
@@ -80,13 +80,13 @@ function App() {
   let divRefs = [];
 
   //setting display Message
-    if(state.isOn){
-     if(displayMessage.current != null){
+  if(state.isOn){
+    if(displayMessage.current != null){
       displayMessage.current.innerText = state.bankName
-     }
-    }else{
+    }
+  }else{
       displayMessage.current.innerText = ""
-    }  
+  }  
 
   //load audio set
   let audioSet = collection.filter(source => source.kitName === state.bankName);
@@ -117,7 +117,6 @@ function App() {
   
   //audio play
   const play = (divRef) => {
-   if(state.isOn){
      displayMessage.current.innerText = divRef.current.id;
      divRef.current.style.boxShadow = "white 0px 3px";
      divRef.current.style.height = "2.8rem";
@@ -129,7 +128,6 @@ function App() {
      divRef.current.style.background = 'white';  
      divRef.current.style.height = "3rem";
     }, 100);
-   }
   }
 
 
@@ -149,7 +147,7 @@ function App() {
           const divRef = createRef();
           divRefs.push(divRef);
           return(
-            <div className="drum-pad" id={source.name} ref={divRef} onClick={()=>{play(divRef)}} style={style()}>
+            <div className="drum-pad" id={source.name} ref={divRef} onClick={()=>{if(state.isOn){play(divRef)}}} style={drumStyle()}>
                 <audio className="clip" src={source.src} id={source.id} ></audio>
                  {source.id}
             </div>
