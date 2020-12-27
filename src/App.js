@@ -55,6 +55,7 @@ function App() {
     volume : 0.5,
     isOn : true
   }
+
   //using reducer
   const [state, dispatch] = useReducer(reducer, defaultState)
 
@@ -76,67 +77,51 @@ function App() {
     }
   }
 
-  //ref array for declaring ref with map
-  let divRefs = [];
-
-  //setting display Message
-  if(state.isOn){
-    if(displayMessage.current != null){
-      displayMessage.current.innerText = state.bankName
-    }
-  }else{
-      displayMessage.current.innerText = ""
-  }  
-
   //load audio set
   let audioSet = collection.filter(source => source.kitName === state.bankName);
+  
+  //trigger keys populated in audioSet map in App return method
+  let triggerKeys = [];
 
   //keydown handler
   const handleKeyDown = (e) => {
     
     if(state.isOn){
-        //get key object name
-        const audioKey = audioSet.find((source) => e.key.toUpperCase() === source.id );
 
-        //get associated div
-        let audioDiv;
-        if(audioKey !== undefined){
-          audioDiv = divRefs.find((divRef)=> divRef.current.id === audioKey.name);
-        }
-
-        //play audio
-        if(audioDiv !== undefined){
-          play(audioDiv);
-        }
+        if(triggerKeys.find(source => source === e.key.toUpperCase())){
+          play(e.key.toUpperCase());
+        } 
+      
     }
-
+    
   };
 
- 
-  
-  
   //audio play
-  const play = (divRef) => {
-     displayMessage.current.innerText = divRef.current.id;
-     divRef.current.style.boxShadow = "white 0px 3px";
-     divRef.current.style.height = "2.8rem";
-     divRef.current.childNodes[0].volume = state.volume;
-     divRef.current.childNodes[0].load();
-     divRef.current.childNodes[0].play();
+  const play = (id) => {
+     displayMessage.current.innerText = refs.current[id].id;
+     refs.current[id].style.boxShadow = "white 0px 3px";
+     refs.current[id].style.height = "2.8rem";
+     refs.current[id].childNodes[0].volume = state.volume;
+     refs.current[id].childNodes[0].load();
+     refs.current[id].childNodes[0].play();
      setTimeout(function(){ 
-     divRef.current.style.boxShadow = "black 3px 3px 5px";
-     divRef.current.style.background = 'white';  
-     divRef.current.style.height = "3rem";
+     refs.current[id].style.boxShadow = "black 3px 3px 5px";
+     refs.current[id].style.background = 'white';  
+     refs.current[id].style.height = "3rem";
     }, 100);
   }
 
-
   //volume state
-  const handleVolumeChange = (volume) => {
+  const handleVolumeChange = (event, volume) => {
     displayMessage.current.innerText = 'Volume : '+Math.round(volume*100);
+    setTimeout(()=>{
+       displayMessage.current.innerText = ""
+    }, 500)
     dispatch({type : "changeVolume", param : volume})
   }
 
+  //ref array for declaring ref with map
+  const refs = useRef({});
   
   return (
     <div className="main" id="drum-machine">
@@ -144,10 +129,9 @@ function App() {
       {
         //creating divs
         audioSet.map((source) => {
-          const divRef = createRef();
-          divRefs.push(divRef);
+          triggerKeys.push(source.id);
           return(
-            <div className="drum-pad" id={source.name} ref={divRef} onClick={()=>{if(state.isOn){play(divRef)}}} style={drumStyle()}>
+            <div className="drum-pad" id={source.name} ref={ref => (refs.current[source.id] = ref)} onClick={()=>{if(state.isOn){play(source.id)}}} style={drumStyle()}>
                 <audio className="clip" src={source.src} id={source.id} ></audio>
                  {source.id}
             </div>
@@ -158,7 +142,7 @@ function App() {
       <div className="operating-controls">
       <button className="power-btn" onClick={()=>{ dispatch({type : "setOn"}) }}>{state.isOn ? "ON" : "OFF"}</button>
         <div className="displayMessage" >
-          <p ref={displayMessage} id="display"></p>
+          <p ref={displayMessage} id="display">{state.bankName}</p>
         </div>
         <Slider value={state.volume} onChange={handleVolumeChange} min={0} max={1} step={0.01} style={{color : "black"}}/>
         <button className="bank_switch" onClick={()=>{dispatch({type : "changeBank"})}}>Switch Bank</button>
