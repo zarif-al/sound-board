@@ -120,7 +120,7 @@ function App() {
     dispatch({type : "changeVolume", param : volume})
   }
 
-  //ref array for declaring ref with map
+  //ref array for creating div refs          
   const refs = useRef({});
   
   return (
